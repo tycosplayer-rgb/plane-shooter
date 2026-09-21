@@ -220,7 +220,7 @@
     powerups = [];
     player = {
       x: W / 2,
-      y: H - 80,
+      y: H - 140,
       w: 28,
       h: 34,
       speed: 320,
@@ -500,8 +500,12 @@
     if (keys['ArrowDown'] || keys['KeyS']) my += 1;
 
     if (pointerActive) {
-      const dx = pointerX - player.x;
-      const dy = pointerY - player.y;
+      // Keep plane above the finger so the thumb doesn't cover it
+      const touchLift = Math.min(120, Math.max(72, H * 0.14));
+      const targetX = pointerX;
+      const targetY = pointerY - touchLift;
+      const dx = targetX - player.x;
+      const dy = targetY - player.y;
       const dist = Math.hypot(dx, dy);
       if (dist > 4) {
         const step = Math.min(dist, player.speed * dt * 1.4);
@@ -515,7 +519,8 @@
     }
 
     player.x = clamp(player.x, player.w / 2 + 4, W - player.w / 2 - 4);
-    player.y = clamp(player.y, player.h / 2 + 40, H - player.h / 2 - 12);
+    // Leave bottom margin so on touch the plane stays above typical finger area
+    player.y = clamp(player.y, player.h / 2 + 40, H - player.h / 2 - 100);
 
     if (player.invuln > 0) player.invuln -= dt;
     if (player.rapid > 0) player.rapid -= dt;

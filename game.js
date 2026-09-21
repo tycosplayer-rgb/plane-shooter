@@ -136,7 +136,6 @@
   const keys = Object.create(null);
   let pointerActive = false;
   let pointerX = 0, pointerY = 0;
-  let pointerOffX = 0, pointerOffY = 0;
 
   window.addEventListener('keydown', (e) => {
     keys[e.code] = true;
@@ -154,14 +153,6 @@
       const r = canvas.getBoundingClientRect();
       pointerX = e.clientX - r.left;
       pointerY = e.clientY - r.top;
-      // Keep the initial finger→plane offset so the ship never jumps under the finger
-      if (typeof state !== 'undefined' && state === STATE.PLAY && player) {
-        pointerOffX = player.x - pointerX;
-        pointerOffY = player.y - pointerY;
-      } else {
-        pointerOffX = 0;
-        pointerOffY = 0;
-      }
       try { el.setPointerCapture(e.pointerId); } catch (_) {}
       e.preventDefault();
     }, { passive: false });
@@ -509,13 +500,15 @@
     if (keys['ArrowDown'] || keys['KeyS']) my += 1;
 
     if (pointerActive) {
-      const targetX = pointerX + pointerOffX;
-      const targetY = pointerY + pointerOffY;
+      // Auto-follow finger, but keep the plane a bit above so it isn't covered
+      const touchLift = Math.min(120, Math.max(72, H * 0.14));
+      const targetX = pointerX;
+      const targetY = pointerY - touchLift;
       const dx = targetX - player.x;
       const dy = targetY - player.y;
       const dist = Math.hypot(dx, dy);
-      if (dist > 1) {
-        const step = Math.min(dist, player.speed * dt * 2.2);
+      if (dist > 4) {
+        const step = Math.min(dist, player.speed * dt * 1.4);
         player.x += (dx / dist) * step;
         player.y += (dy / dist) * step;
       }

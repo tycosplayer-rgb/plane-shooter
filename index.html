@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>飞机大战</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="game"></canvas>
+
+    <div id="hud" class="hidden">
+      <div class="hud-left">
+        <span id="scoreLabel">分数</span>: <span id="scoreVal">0</span>
+      </div>
+      <div class="hud-right">
+        <span id="livesLabel">生命</span>: <span id="livesVal">3</span>
+        <button id="muteBtn" type="button" aria-label="静音">🔊</button>
+      </div>
+    </div>
+
+    <div id="overlay" class="overlay">
+      <div class="panel">
+        <h1 id="title">飞机大战</h1>
+        <p id="subtitle" class="subtitle">WASD / 方向键移动 · 空格射击</p>
+        <p id="touchHint" class="subtitle touch-hint">拖动移动 · 自动射击</p>
+        <button id="startBtn" type="button">开始游戏</button>
+        <p id="finalScore" class="final-score hidden"></p>
+      </div>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>

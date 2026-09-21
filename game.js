@@ -137,6 +137,26 @@
   let pointerActive = false;
   let pointerX = 0, pointerY = 0;
 
+  function touchLiftPx() {
+    return Math.min(140, Math.max(88, H * 0.16));
+  }
+
+  /** Map client coords into game logical space (W×H), not CSS/DPR mismatch. */
+  function setPointerFromEvent(e) {
+    const r = canvas.getBoundingClientRect();
+    const sx = W / Math.max(1, r.width);
+    const sy = H / Math.max(1, r.height);
+    pointerX = (e.clientX - r.left) * sx;
+    pointerY = (e.clientY - r.top) * sy;
+  }
+
+  function snapPlayerAboveFinger() {
+    if (!player || state !== STATE.PLAY) return;
+    const lift = touchLiftPx();
+    player.x = clamp(pointerX, player.w / 2 + 4, W - player.w / 2 - 4);
+    player.y = clamp(pointerY - lift, player.h / 2 + 40, H - player.h / 2 - 100);
+  }
+
   window.addEventListener('keydown', (e) => {
     keys[e.code] = true;
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) {
@@ -149,19 +169,18 @@
   function bindPointer(el) {
     el.addEventListener('pointerdown', (e) => {
       if (e.target === muteBtn || e.target === startBtn) return;
+      if (e.target.closest && e.target.closest('#muteBtn, #startBtn, .panel')) return;
       pointerActive = true;
-      const r = canvas.getBoundingClientRect();
-      pointerX = e.clientX - r.left;
-      pointerY = e.clientY - r.top;
+      setPointerFromEvent(e);
+      snapPlayerAboveFinger();
       try { el.setPointerCapture(e.pointerId); } catch (_) {}
       e.preventDefault();
     }, { passive: false });
 
     el.addEventListener('pointermove', (e) => {
       if (!pointerActive) return;
-      const r = canvas.getBoundingClientRect();
-      pointerX = e.clientX - r.left;
-      pointerY = e.clientY - r.top;
+      setPointerFromEvent(e);
+      snapPlayerAboveFinger();
       e.preventDefault();
     }, { passive: false });
 
@@ -174,6 +193,7 @@
   }
 
   bindPointer(canvas);
+  bindPointer(document.getElementById('app'));
   document.getElementById('app').addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
 
   // ----- Game state -----
@@ -500,18 +520,8 @@
     if (keys['ArrowDown'] || keys['KeyS']) my += 1;
 
     if (pointerActive) {
-      // Auto-follow finger, but keep the plane a bit above so it isn't covered
-      const touchLift = Math.min(120, Math.max(72, H * 0.14));
-      const targetX = pointerX;
-      const targetY = pointerY - touchLift;
-      const dx = targetX - player.x;
-      const dy = targetY - player.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist > 4) {
-        const step = Math.min(dist, player.speed * dt * 1.4);
-        player.x += (dx / dist) * step;
-        player.y += (dy / dist) * step;
-      }
+      // Already snapped in pointer handlers; keep locked each frame above finger
+      snapPlayerAboveFinger();
     } else if (mx || my) {
       const len = Math.hypot(mx, my) || 1;
       player.x += (mx / len) * player.speed * dt;
